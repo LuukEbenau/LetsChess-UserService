@@ -11,6 +11,8 @@ using Microsoft.OpenApi.Models;
 
 using MinDef_AuthService.Data;
 
+using NLog.Extensions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,9 +32,16 @@ namespace LetsChess_UserService
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.AddCors(options => {
+				options.AddDefaultPolicy(options => {
+					options.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+				});
+			});
 			var connectionString = Configuration.GetConnectionString("UserService");
-			Console.WriteLine("con string is:" + connectionString);
-			services.AddDbContext<DBCauth>(options => options.UseMySql(connectionString));
+
+			services.AddDbContext<DBCauth>(options => options.UseMySql(connectionString, new MySqlServerVersion(new Version("8.0.24")), o=> { 			
+			}));
+			services.AddScoped<UserRepository>();
 
 			services.AddControllers();
 			services.AddSwaggerGen(c =>
@@ -42,8 +51,9 @@ namespace LetsChess_UserService
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
 		{
+			loggerFactory.AddNLog();
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
@@ -51,12 +61,7 @@ namespace LetsChess_UserService
 				app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LetsChess_UserService v1"));
 			}
 
-			//app.UseHttpsRedirection();
-
 			app.UseRouting();
-
-			app.UseAuthorization();
-
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();

@@ -1,13 +1,9 @@
 ﻿using LetsChess_UserService.Models;
 
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 using MinDef_AuthService.Data;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace LetsChess_UserService.Controllers
 {
@@ -15,17 +11,28 @@ namespace LetsChess_UserService.Controllers
 	[Route("/api/user")]
 	public class UserController : Controller
 	{
+		private readonly ILogger<UserController> logger;
 		private UserRepository userRepository;
 
-		public UserController(DBCauth dBCauth)
+		public UserController(UserRepository userRepository, ILogger<UserController> logger)
 		{
-			this.userRepository = new UserRepository(dBCauth);
+			this.userRepository = userRepository;
+			this.logger = logger;
 		}
 
 		[HttpPost("register")]
 		public IActionResult Register(User user) {
+			logger.LogDebug($"/api/user/register endpoint called with user {user?.ExternalId}",user);
 			var dbUser = userRepository.GetUserById(user.ExternalId);
-			return dbUser == default ? Ok(userRepository.AddUser(user)) : Ok(dbUser);
+
+			if (dbUser == default) {
+				logger.LogDebug($"no user found with id {user?.ExternalId}, adding a new user");
+				return Ok(userRepository.AddUser(user)); 
+			}
+			else {
+				logger.LogTrace($"user {dbUser.Username} found with id {user?.ExternalId}");
+				return Ok(dbUser);
+			} 
 		}
 	}
 }
