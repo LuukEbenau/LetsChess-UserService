@@ -8,7 +8,7 @@ using MinDef_AuthService.Data;
 namespace LetsChess_UserService.Controllers
 {
 	[ApiController]
-	[Route("/api/user")]
+	[Route("/user")]
 	public class UserController : Controller
 	{
 		private readonly ILogger<UserController> logger;
@@ -22,7 +22,7 @@ namespace LetsChess_UserService.Controllers
 
 		[HttpPost("register")]
 		public IActionResult Register(User user) {
-			logger.LogDebug($"/api/user/register endpoint called with user {user?.ExternalId}",user);
+			logger.LogDebug($"/user/register endpoint called with user {user?.ExternalId}",user);
 			var dbUser = userRepository.GetUserById(user.ExternalId);
 
 			if (dbUser == default) {
