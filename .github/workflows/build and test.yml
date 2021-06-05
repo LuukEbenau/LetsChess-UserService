@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+#SonarCloud Section
+    - name: Set up JDK 11 for SonarQube
       uses: actions/setup-java@v1
       with:
         java-version: 1.11
@@ -37,24 +38,25 @@ jobs:
       run: |
         mkdir ./.sonar/scanner -p
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-    - name: Build and analyze
+    - name: Start SonarCloud scanner
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       shell: bash
       run: |
         ./.sonar/scanner/dotnet-sonarscanner begin /k:"LuukEbenau_LetsChess-UserService" /o:"luukebenau-github" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+# Build and test section
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
-    - name: Restore dependencies
+    - name: Restore Application Dependencies
       run: dotnet restore
-    - name: Build
+    - name: Build Application
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-
+#Sonarcloud push section
     - name: sonar push
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
